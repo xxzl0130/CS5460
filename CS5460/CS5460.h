@@ -87,6 +87,7 @@
 
 #define SIGNED_OUTPUT_MAX			(~0UL>>9)
 #define UNSIGNED_OUTPUT_MAX			(~0UL>>8)
+#define SIGN_BIT					(1L << 23)
 
 union int32Data
 {
@@ -103,19 +104,27 @@ public:
 	CS5460(uint8_t _cs,uint8_t _reset = PIN_NDEFINED, uint8_t _edir = PIN_NDEFINED, uint8_t _eout = PIN_NDEFINED);
 
 	void init() const;
-	uint32_t readRegister(uint8_t reg);
-	void writeRegister(uint8_t reg, uint32_t cmd);
+	uint32_t readRegister(uint8_t reg) const;
+	void writeRegister(uint8_t reg, uint32_t cmd) const;
 	void clearStatus(uint32_t cmd);
 	void startSigleConvert();
 	void startMultiConvert();
 	void resetChip() const;
 	double getCurrent();
+	uint32_t getRawCurrent();
 	double getVoltage();
+	uint32_t getRawVoltage();
 	double getPower();
+	uint32_t getRawPower();
 	double getRMSCurrent();
+	uint32_t getRawRMSCurrent();
 	double getRMSVoltage();
+	uint32_t getRawRMSVoltage();
 	double getApparentPower();
 	double getPowerFactor();
+	uint32_t getStatus();
+	void select() const;
+	void unselect() const;
 };
 
 #endif //__CS5460_H__
