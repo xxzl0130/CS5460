@@ -3,7 +3,7 @@
 /**
  * \brief constructor without arguments
  */
-CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(0)
+CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(0),currentGain(1),voltageGain(1)
 {
 }
 
@@ -14,7 +14,7 @@ CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDE
  * \param _edir EDIR pin
  * \param _eout EOUT pin
  */
-CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout)
+CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):currentGain(1), voltageGain(1)
 {
 	csPin = _cs;
 	pinMode(csPin, OUTPUT);
@@ -132,7 +132,7 @@ void CS5460::resetChip() const
 
 double CS5460::getCurrent()
 {
-	return double(readRegister(LAST_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX;
+	return double(readRegister(LAST_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX * currentGain;
 }
 
 uint32_t CS5460::getRawCurrent()
@@ -142,7 +142,7 @@ uint32_t CS5460::getRawCurrent()
 
 double CS5460::getVoltage()
 {
-	return double(readRegister(LAST_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX;
+	return double(readRegister(LAST_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX * voltageGain;
 }
 
 uint32_t CS5460::getRawVoltage()
@@ -160,7 +160,7 @@ double CS5460::getPower()
 		// make it neg
 		rawData = -rawData;
 	}
-	return double(rawData) / SIGNED_OUTPUT_MAX;
+	return double(rawData) / SIGNED_OUTPUT_MAX * powerGain;
 }
 
 uint32_t CS5460::getRawPower()
@@ -170,7 +170,7 @@ uint32_t CS5460::getRawPower()
 
 double CS5460::getRMSCurrent()
 {
-	return double(readRegister(RMS_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX;
+	return double(readRegister(RMS_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX * currentGain;
 }
 
 uint32_t CS5460::getRawRMSCurrent()
@@ -180,7 +180,7 @@ uint32_t CS5460::getRawRMSCurrent()
 
 double CS5460::getRMSVoltage()
 {
-	return double(readRegister(RMS_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX;
+	return double(readRegister(RMS_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX * voltageGain;
 }
 
 uint32_t CS5460::getRawRMSVoltage()
@@ -190,7 +190,7 @@ uint32_t CS5460::getRawRMSVoltage()
 
 double CS5460::getApparentPower()
 {
-	return getRMSCurrent() * getRMSVoltage();
+	return getRMSCurrent() * getRMSVoltage() * powerGain;
 }
 
 double CS5460::getPowerFactor()
@@ -211,5 +211,17 @@ void CS5460::select() const
 void CS5460::unselect() const
 {
 	digitalWrite(csPin, HIGH);
+}
+
+void CS5460::setCurrentGain(double gain)
+{
+	currentGain = gain;
+	powerGain = currentGain * voltageGain;
+}
+
+void CS5460::setVoltageGain(double gain)
+{
+	voltageGain = gain;
+	powerGain = currentGain * voltageGain;
 }
 

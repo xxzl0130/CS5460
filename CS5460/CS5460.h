@@ -99,6 +99,7 @@ class CS5460
 {
 private:
 	uint8_t resetPin, edirPin, eoutPin, csPin;
+	double currentGain, voltageGain, powerGain;
 public:
 	CS5460();
 	CS5460(uint8_t _cs,uint8_t _reset = PIN_NDEFINED, uint8_t _edir = PIN_NDEFINED, uint8_t _eout = PIN_NDEFINED);
@@ -125,6 +126,8 @@ public:
 	uint32_t getStatus();
 	void select() const;
 	void unselect() const;
+	void setCurrentGain(double gain);
+	void setVoltageGain(double gain);
 };
 
 #endif //__CS5460_H__
