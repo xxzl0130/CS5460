@@ -41,7 +41,6 @@ CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):curren
  */
 void CS5460::init() const
 {
-	pinMode(12, INPUT_PULLUP);
 	select();
 	SPI.begin();
 	SPI.beginTransaction(SPISettings(2000000L, MSBFIRST, SPI_MODE0));
