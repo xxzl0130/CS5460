@@ -3,7 +3,7 @@
 /**
  * \brief constructor without arguments
  */
-CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(0),currentGain(1),voltageGain(1)
+CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(PIN_NDEFINED),currentGain(1),voltageGain(1)
 {
 }
 

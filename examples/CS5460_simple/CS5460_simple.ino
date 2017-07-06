@@ -7,7 +7,7 @@
  * SCLK 13 --- 5
  * SS   10 --- 7
  */
-CS5406 powerMeter(10);
+CS5460 powerMeter(10);
 
 void setup()
 {
