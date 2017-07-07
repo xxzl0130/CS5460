@@ -44,7 +44,7 @@ void CS5460::init() const
 	pinMode(12, INPUT_PULLUP);
 	select();
 	SPI.begin();
-	SPI.beginTransaction(SPISettings(2000000L, MSBFIRST, SPI_MODE0));
+	SPI.beginTransaction(SETTING);
 	if(resetPin != PIN_NDEFINED)
 	{
 		digitalWrite(resetPin, HIGH);
@@ -53,6 +53,7 @@ void CS5460::init() const
 	SPI.transfer(SYNC1);
 	SPI.transfer(SYNC1);
 	SPI.transfer(SYNC0);
+	SPI.endTransaction();
 	unselect();
 }
 
@@ -65,6 +66,7 @@ uint32_t CS5460::readRegister(uint8_t reg) const
 {
 	uint32_t data = 0;
 	select();
+	SPI.beginTransaction(SETTING);
 	reg &= READ_REGISTER;
 	SPI.transfer(reg);
 	for(uint8_t i = 0;i < 3;++i)
@@ -72,6 +74,7 @@ uint32_t CS5460::readRegister(uint8_t reg) const
 		data <<= 8;
 		data |= SPI.transfer(SYNC1);
 	}
+	SPI.endTransaction();
 	unselect();
 	return data;
 }
@@ -85,6 +88,7 @@ void CS5460::writeRegister(uint8_t reg, uint32_t cmd) const
 {
 	int32Data data;
 	select();
+	SPI.beginTransaction(SETTING);
 	reg |= WRITE_REGISTER;
 	SPI.transfer(reg);
 	data.data32 = cmd;
@@ -92,6 +96,7 @@ void CS5460::writeRegister(uint8_t reg, uint32_t cmd) const
 	{// LSB in memory
 		SPI.transfer(data.data8[i]);
 	}
+	SPI.endTransaction();
 	unselect();
 }
 
@@ -132,7 +137,7 @@ void CS5460::resetChip() const
 
 double CS5460::getCurrent()
 {
-	return double(readRegister(LAST_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX * currentGain;
+	return signed2float(readRegister(LAST_CURRENT_REGISTER)) * currentGain;
 }
 
 uint32_t CS5460::getRawCurrent()
@@ -142,7 +147,7 @@ uint32_t CS5460::getRawCurrent()
 
 double CS5460::getVoltage()
 {
-	return double(readRegister(LAST_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX * voltageGain;
+	return signed2float(readRegister(LAST_VOLTAGE_REGISTER)) * voltageGain;
 }
 
 uint32_t CS5460::getRawVoltage()
@@ -152,15 +157,7 @@ uint32_t CS5460::getRawVoltage()
 
 double CS5460::getPower()
 {
-	int32_t rawData = readRegister(LAST_POWER_REGISTER);
-	if(rawData & SIGN_BIT)
-	{// signed
-		// clear sign bit
-		rawData ^= SIGN_BIT;
-		// make it neg
-		rawData = -rawData;
-	}
-	return double(rawData) / SIGNED_OUTPUT_MAX * powerGain;
+	return signed2float(readRegister(LAST_POWER_REGISTER)) * powerGain;
 }
 
 uint32_t CS5460::getRawPower()
@@ -170,7 +167,7 @@ uint32_t CS5460::getRawPower()
 
 double CS5460::getRMSCurrent()
 {
-	return double(readRegister(RMS_CURRENT_REGISTER)) / UNSIGNED_OUTPUT_MAX * currentGain;
+	return unsigned2float(readRegister(RMS_CURRENT_REGISTER)) * currentGain;
 }
 
 uint32_t CS5460::getRawRMSCurrent()
@@ -180,7 +177,7 @@ uint32_t CS5460::getRawRMSCurrent()
 
 double CS5460::getRMSVoltage()
 {
-	return double(readRegister(RMS_VOLTAGE_REGISTER)) / UNSIGNED_OUTPUT_MAX * voltageGain;
+	return unsigned2float(readRegister(RMS_VOLTAGE_REGISTER)) * voltageGain;
 }
 
 uint32_t CS5460::getRawRMSVoltage()
@@ -225,6 +222,10 @@ void CS5460::setVoltageGain(double gain)
 	powerGain = currentGain * voltageGain;
 }
 
+/**
+ * \brief send a 8-bit command with no return
+ * \param cmd 8-bit command
+ */
 void CS5460::send(uint8_t cmd)
 {
 	select();
@@ -234,3 +235,56 @@ void CS5460::send(uint8_t cmd)
 	unselect();
 }
 
+/**
+ * \brief calibrate voltage/current gain/offset register
+ * \param cmd calibrate command, must be commands for calibrate control
+ */
+void CS5460::calibrate(uint8_t cmd)
+{
+	cmd = CALIBRATE_CONTROL | (cmd & CALIBRATE_ALL);
+	send(cmd);
+	while(!(getStatus() & DATA_READY));
+	// wait until data ready;
+	clearStatus(DATA_READY);
+}
+
+uint32_t CS5460::calibrateVoltageOffset()
+{
+	calibrate(CALIBRATE_VOLTAGE | CALIBRATE_OFFSET);
+	return readRegister(VOLTAGE_OFFSET_REGISTER);
+}
+
+uint32_t CS5460::calibrateVoltageGain()
+{
+	calibrate(CALIBRATE_VOLTAGE | CALIBRATE_GAIN);
+	return readRegister(VOLTAGE_GAIN_REGISTER);
+}
+
+uint32_t CS5460::calibrateCurrentOffset()
+{
+	calibrate(CALIBRATE_CURRENT | CALIBRATE_OFFSET);
+	return readRegister(CURRENT_OFFSET_REGISTER);
+}
+
+uint32_t CS5460::calibrateCurrentGain()
+{
+	calibrate(CALIBRATE_CURRENT | CALIBRATE_GAIN);
+	return readRegister(CURRENT_GAIN_REGISTER);
+}
+
+double CS5460::signed2float(int32_t data)
+{
+	if(data & SIGN_BIT)
+	{// signed
+		// clear sign bit
+		data ^= SIGN_BIT;
+		// make it neg
+		data = data - SIGNED_OUTPUT_MAX;
+	}
+	return double(data) / SIGNED_OUTPUT_MAX;
+}
+
+double CS5460::unsigned2float(uint32_t data)
+{
+	return double(data) / UNSIGNED_OUTPUT_MAX;
+}
