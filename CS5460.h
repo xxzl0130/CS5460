@@ -122,6 +122,8 @@ public:
 	uint32_t getRawVoltage();
 	double getPower();
 	uint32_t getRawPower();
+	double getEnergy();
+	uint32_t getRawEnergy();
 	double getRMSCurrent();
 	uint32_t getRawRMSCurrent();
 	double getRMSVoltage();

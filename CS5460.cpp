@@ -192,7 +192,7 @@ double CS5460::getApparentPower()
 
 double CS5460::getPowerFactor()
 {
-	return getPower() / getApparentPower();
+	return getEnergy() / getApparentPower();
 }
 
 uint32_t CS5460::getStatus()
@@ -287,4 +287,14 @@ double CS5460::signed2float(int32_t data)
 double CS5460::unsigned2float(uint32_t data)
 {
 	return double(data) / UNSIGNED_OUTPUT_MAX;
+}
+
+double CS5460::getEnergy()
+{
+	return signed2float(readRegister(TOTAL_ENERGY_REGISTER)) * powerGain;
+}
+
+uint32_t CS5460::getRawEnergy()
+{
+	return readRegister(TOTAL_ENERGY_REGISTER);
 }
