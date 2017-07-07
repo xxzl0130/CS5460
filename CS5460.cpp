@@ -3,7 +3,7 @@
 /**
  * \brief constructor without arguments
  */
-CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(PIN_NDEFINED),currentGain(1),voltageGain(1)
+CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(PIN_NDEFINED),currentGain(1.0),voltageGain(1.0),powerGain(1.0)
 {
 }
 
@@ -14,7 +14,7 @@ CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDE
  * \param _edir EDIR pin
  * \param _eout EOUT pin
  */
-CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):currentGain(1), voltageGain(1)
+CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):currentGain(1.0), voltageGain(1.0),powerGain(1.0)
 {
 	csPin = _cs;
 	pinMode(csPin, OUTPUT);
@@ -41,6 +41,7 @@ CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):curren
  */
 void CS5460::init() const
 {
+	pinMode(12, INPUT_PULLUP);
 	select();
 	SPI.begin();
 	SPI.beginTransaction(SPISettings(2000000L, MSBFIRST, SPI_MODE0));
@@ -69,7 +70,7 @@ uint32_t CS5460::readRegister(uint8_t reg) const
 	for(uint8_t i = 0;i < 3;++i)
 	{
 		data <<= 8;
-		data |= SPI.transfer(SYNC0);
+		data |= SPI.transfer(SYNC1);
 	}
 	unselect();
 	return data;
@@ -103,14 +104,14 @@ void CS5460::clearStatus(uint32_t cmd)
 	writeRegister(STATUS_REGISTER, cmd);
 }
 
-void CS5460::startSigleConvert()
+void CS5460::startSingleConvert()
 {
-	SPI.transfer(START_SIGLE_CPNVERT);
+	send(START_SINGLE_CPNVERT);
 }
 
 void CS5460::startMultiConvert()
 {
-	SPI.transfer(START_MULTI_CONVERT);
+	send(START_MULTI_CONVERT);
 }
 
 void CS5460::resetChip() const
@@ -222,5 +223,14 @@ void CS5460::setVoltageGain(double gain)
 {
 	voltageGain = gain;
 	powerGain = currentGain * voltageGain;
+}
+
+void CS5460::send(uint8_t cmd)
+{
+	select();
+	SPI.beginTransaction(SETTING);
+	SPI.transfer(cmd);
+	SPI.endTransaction();
+	unselect();
 }
 

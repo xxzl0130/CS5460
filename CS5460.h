@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <SPI.h>
 
-#define START_SIGLE_CPNVERT			0xE0
+#define START_SINGLE_CPNVERT			0xE0
 #define START_MULTI_CONVERT			0xE8
 #define SYNC0						0xFE
 #define SYNC1						0xFF
@@ -89,6 +89,8 @@
 #define UNSIGNED_OUTPUT_MAX			(~0UL>>8)
 #define SIGN_BIT					(1L << 23)
 
+#define SETTING						SPISettings(2000000L, MSBFIRST, SPI_MODE0)
+
 union int32Data
 {
 	uint32_t data32;
@@ -108,7 +110,7 @@ public:
 	uint32_t readRegister(uint8_t reg) const;
 	void writeRegister(uint8_t reg, uint32_t cmd) const;
 	void clearStatus(uint32_t cmd);
-	void startSigleConvert();
+	void startSingleConvert();
 	void startMultiConvert();
 	void resetChip() const;
 	double getCurrent();
@@ -124,6 +126,7 @@ public:
 	double getApparentPower();
 	double getPowerFactor();
 	uint32_t getStatus();
+	void send(uint8_t cmd);
 	void select() const;
 	void unselect() const;
 	void setCurrentGain(double gain);
