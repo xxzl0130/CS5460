@@ -103,6 +103,8 @@ class CS5460
 private:
 	uint8_t resetPin, edirPin, eoutPin, csPin;
 	double currentGain, voltageGain, powerGain;
+	uint32_t clkFreq,meaFreq;
+
 	double signed2float(int32_t data);
 	double unsigned2float(uint32_t data);
 public:
@@ -141,6 +143,8 @@ public:
 	uint32_t calibrateVoltageGain();
 	uint32_t calibrateCurrentOffset();
 	uint32_t calibrateCurrentGain();
+	void setFrequency(uint32_t freq);
+	void setMeasureFrequency(uint32_t freq);
 };
 
 #endif //__CS5460_H__

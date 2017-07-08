@@ -3,7 +3,8 @@
 /**
  * \brief constructor without arguments
  */
-CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), csPin(PIN_NDEFINED),currentGain(1.0),voltageGain(1.0),powerGain(1.0)
+CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDEFINED), 
+csPin(PIN_NDEFINED),currentGain(1.0),voltageGain(1.0),powerGain(1.0),clkFreq(4096000L), meaFreq(1)
 {
 }
 
@@ -14,7 +15,8 @@ CS5460::CS5460(): resetPin(PIN_NDEFINED), edirPin(PIN_NDEFINED), eoutPin(PIN_NDE
  * \param _edir EDIR pin
  * \param _eout EOUT pin
  */
-CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):currentGain(1.0), voltageGain(1.0),powerGain(1.0)
+CS5460::CS5460(uint8_t _cs, uint8_t _reset, uint8_t _edir, uint8_t _eout):currentGain(1.0)
+, voltageGain(1.0),powerGain(1.0),clkFreq(4096000L),meaFreq(1)
 {
 	csPin = _cs;
 	pinMode(csPin, OUTPUT);
@@ -187,12 +189,13 @@ uint32_t CS5460::getRawRMSVoltage()
 
 double CS5460::getApparentPower()
 {
-	return getRMSCurrent() * getRMSVoltage() * powerGain;
+	return getRMSCurrent() * getRMSVoltage();
 }
 
 double CS5460::getPowerFactor()
 {
-	return getEnergy() / getApparentPower();
+	double factor = getEnergy() / getApparentPower();
+	return constrain(factor,-1.0,1.0);
 }
 
 uint32_t CS5460::getStatus()
@@ -284,6 +287,7 @@ double CS5460::signed2float(int32_t data)
 	return double(data) / SIGNED_OUTPUT_MAX;
 }
 
+
 double CS5460::unsigned2float(uint32_t data)
 {
 	return double(data) / UNSIGNED_OUTPUT_MAX;
@@ -291,10 +295,41 @@ double CS5460::unsigned2float(uint32_t data)
 
 double CS5460::getEnergy()
 {
-	return signed2float(readRegister(TOTAL_ENERGY_REGISTER)) * powerGain;
+	return signed2float(readRegister(TOTAL_ENERGY_REGISTER)) * powerGain * meaFreq;
 }
 
 uint32_t CS5460::getRawEnergy()
 {
 	return readRegister(TOTAL_ENERGY_REGISTER);
+}
+
+/**
+* \brief set chip clk frequency and set divide K properly.
+* \param freq clk frequency (Hz)
+*/
+void CS5460::setFrequency(uint32_t freq)
+{
+	clkFreq = freq;
+	if(freq <= 5000000L)
+	{
+		writeRegister(CONFIG_REGISTER, DIVIDE_K_1);
+	}
+	else if(freq <= 10000000L)
+	{
+		writeRegister(CONFIG_REGISTER, DIVIDE_K_2);
+	}
+	else
+	{
+		writeRegister(CONFIG_REGISTER, DIVIDE_K_4);
+	}
+}
+
+/**
+* \brief set chip measure (report) frequency and set energy gain properly.
+* \param freq frequency (Hz)
+*/
+void CS5460::setMeasureFrequency(uint32_t freq)
+{
+	meaFreq = freq;
+	writeRegister(CYCLE_COUNT_REGISTER, clkFreq / 1024 / freq);
 }
