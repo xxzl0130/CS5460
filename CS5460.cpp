@@ -1,4 +1,5 @@
 #include "CS5460.h"
+#include <math.h>
 
 /**
  * \brief constructor without arguments
@@ -195,6 +196,8 @@ double CS5460::getApparentPower()
 double CS5460::getPowerFactor()
 {
 	double factor = getEnergy() / getApparentPower();
+	if (isnan(factor))
+		return 0.0;
 	return constrain(factor,-1.0,1.0);
 }
 
