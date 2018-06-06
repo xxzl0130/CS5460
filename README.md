@@ -2,7 +2,7 @@
 Arduino library for CS5460
 
 
-Using SPI interface to connct, tested on Arduino UNO.
+Using SPI interface to connect, tested on Arduino UNO.
 
 Current functions include set config register arguments manually, read measurements in raw binary format and float number and calibrate gain and offset.
 
