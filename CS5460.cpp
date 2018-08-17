@@ -75,7 +75,7 @@ uint32_t CS5460::readRegister(uint8_t reg) const
 	for(uint8_t i = 0;i < 3;++i)
 	{
 		data <<= 8;
-		data |= SPI.transfer(SYNC1);
+		data |= SPI.transfer(SYNC0);
 	}
 	SPI.endTransaction();
 	unselect();
