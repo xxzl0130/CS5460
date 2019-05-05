@@ -65,10 +65,10 @@
 
 // status flag
 #define INVVLID_COMMAND				(0x01L<<0)
-#define LOW_SUPPLY					(0x01L<<1)
-#define CURRENT_OSCILLATION			(0x01L<<2)
-#define VOLTAGE_OSCILLATION			(0x01L<<3)
-#define WATCH_DOG					(0x01L<<4)
+#define LOW_SUPPLY					(0x01L<<2)
+#define CURRENT_OSCILLATION			(0x01L<<3)
+#define VOLTAGE_OSCILLATION			(0x01L<<4)
+#define WATCH_DOG					(0x01L<<5)
 #define EOUT_OUT_OF_RANGE			(0x01L<<11)
 #define ENERGY_OUT_OF_RANGE			(0x01L<<12)
 #define VRMS_OUT_OF_RANGE			(0x01L<<13)
